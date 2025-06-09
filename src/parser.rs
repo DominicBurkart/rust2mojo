@@ -209,8 +209,12 @@ fn convert_return_type(output: &syn::ReturnType) -> Option<Type> {
     }
 }
 
-fn convert_block(_block: &syn::Block) -> Vec<Statement> {
-    Vec::new() // TODO: Implement proper conversion
+fn convert_block(block: &syn::Block) -> Vec<Statement> {
+    block
+        .stmts
+        .iter()
+        .filter_map(convert_statement)
+        .collect()
 }
 
 fn convert_attributes(_attrs: &[syn::Attribute]) -> Vec<Attribute> {
@@ -316,6 +320,176 @@ fn convert_path_type(_path: &syn::Path) -> Type {
     )
 }
 
-fn convert_expression(_expr: &syn::Expr) -> Expression {
-    Expression::Literal(Literal::Integer(0)) // TODO: Implement proper conversion
+fn convert_statement(stmt: &syn::Stmt) -> Option<Statement> {
+    match stmt {
+        syn::Stmt::Local(local) => convert_local_statement(local),
+        syn::Stmt::Item(_item) => {
+            // Items in function bodies are rare, skip for now
+            None
+        }
+        syn::Stmt::Expr(expr, _) => Some(Statement::Expression(convert_expression(expr))),
+        syn::Stmt::Macro(_) => {
+            // Macro calls, skip for now
+            None
+        }
+    }
+}
+
+fn convert_local_statement(local: &syn::Local) -> Option<Statement> {
+    // Extract variable name from pattern
+    if let syn::Pat::Ident(pat_ident) = &local.pat {
+        let name = pat_ident.ident.to_string();
+        let mutable = pat_ident.mutability.is_some();
+        
+        // Extract type annotation if present - syn::Local doesn't have ty field directly
+        let type_ = None; // TODO: Extract from pattern type annotations when present
+        
+        // Extract initializer if present
+        let value = local.init.as_ref().map(|init| convert_expression(&init.expr));
+        
+        Some(Statement::Let {
+            name,
+            mutable,
+            type_,
+            value,
+        })
+    } else {
+        // Complex patterns not supported yet
+        None
+    }
+}
+
+fn convert_expression(expr: &syn::Expr) -> Expression {
+    match expr {
+        syn::Expr::Lit(expr_lit) => convert_literal_expression(expr_lit),
+        syn::Expr::Path(expr_path) => {
+            if let Some(ident) = expr_path.path.get_ident() {
+                Expression::Identifier(ident.to_string())
+            } else {
+                // Complex paths
+                let path = expr_path
+                    .path
+                    .segments
+                    .iter()
+                    .map(|s| s.ident.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::");
+                Expression::Path(path)
+            }
+        }
+        syn::Expr::Binary(expr_binary) => {
+            let left = Box::new(convert_expression(&expr_binary.left));
+            let right = Box::new(convert_expression(&expr_binary.right));
+            let op = convert_binary_operator(&expr_binary.op);
+            Expression::Binary { left, op, right }
+        }
+        syn::Expr::Call(expr_call) => {
+            let function = Box::new(convert_expression(&expr_call.func));
+            let args = expr_call
+                .args
+                .iter()
+                .map(convert_expression)
+                .collect();
+            Expression::Call { function, args }
+        }
+        syn::Expr::Return(expr_return) => {
+            // Return expressions are handled as statements in our AST
+            match &expr_return.expr {
+                Some(return_expr) => convert_expression(return_expr),
+                None => Expression::Literal(Literal::String("()".to_string())), // Unit return
+            }
+        }
+        syn::Expr::If(_expr_if) => {
+            // If expressions are complex, for now return a placeholder
+            Expression::Literal(Literal::String("if_expr_placeholder".to_string()))
+        }
+        syn::Expr::Block(_expr_block) => {
+            // Block expressions can contain statements
+            Expression::Literal(Literal::String("block_expr_placeholder".to_string()))
+        }
+        syn::Expr::Assign(expr_assign) => {
+            let left = Box::new(convert_expression(&expr_assign.left));
+            let right = Box::new(convert_expression(&expr_assign.right));
+            Expression::Binary {
+                left,
+                op: BinaryOp::Assign,
+                right,
+            }
+        }
+        syn::Expr::Field(expr_field) => {
+            // Field access like obj.field
+            let base = convert_expression(&expr_field.base);
+            if let syn::Member::Named(field_name) = &expr_field.member {
+                Expression::Path(format!("{}.{}", 
+                    match base {
+                        Expression::Identifier(id) => id,
+                        Expression::Path(path) => path,
+                        _ => "unknown".to_string(),
+                    },
+                    field_name
+                ))
+            } else {
+                Expression::Literal(Literal::String("field_access_placeholder".to_string()))
+            }
+        }
+        syn::Expr::Index(_expr_index) => {
+            // Array/slice indexing
+            Expression::Literal(Literal::String("index_placeholder".to_string()))
+        }
+        syn::Expr::Unary(_expr_unary) => {
+            // Unary operations like !x, -x, *x, &x
+            Expression::Literal(Literal::String("unary_placeholder".to_string()))
+        }
+        _ => {
+            // Fallback for unsupported expressions
+            Expression::Literal(Literal::String("unsupported_expr".to_string()))
+        }
+    }
+}
+
+fn convert_literal_expression(expr_lit: &syn::ExprLit) -> Expression {
+    match &expr_lit.lit {
+        syn::Lit::Str(lit_str) => Expression::Literal(Literal::String(lit_str.value())),
+        syn::Lit::Int(lit_int) => {
+            if let Ok(value) = lit_int.base10_parse::<i64>() {
+                Expression::Literal(Literal::Integer(value))
+            } else {
+                Expression::Literal(Literal::Integer(0))
+            }
+        }
+        syn::Lit::Float(lit_float) => {
+            if let Ok(value) = lit_float.base10_parse::<f64>() {
+                Expression::Literal(Literal::Float(value))
+            } else {
+                Expression::Literal(Literal::Float(0.0))
+            }
+        }
+        syn::Lit::Bool(lit_bool) => Expression::Literal(Literal::Boolean(lit_bool.value)),
+        syn::Lit::Char(lit_char) => Expression::Literal(Literal::Char(lit_char.value())),
+        _ => Expression::Literal(Literal::String("unsupported_literal".to_string())),
+    }
+}
+
+fn convert_binary_operator(op: &syn::BinOp) -> BinaryOp {
+    match op {
+        syn::BinOp::Add(_) => BinaryOp::Add,
+        syn::BinOp::Sub(_) => BinaryOp::Sub,
+        syn::BinOp::Mul(_) => BinaryOp::Mul,
+        syn::BinOp::Div(_) => BinaryOp::Div,
+        syn::BinOp::Rem(_) => BinaryOp::Mod,
+        syn::BinOp::And(_) => BinaryOp::And,
+        syn::BinOp::Or(_) => BinaryOp::Or,
+        syn::BinOp::BitXor(_) => BinaryOp::BitXor,
+        syn::BinOp::BitAnd(_) => BinaryOp::BitAnd,
+        syn::BinOp::BitOr(_) => BinaryOp::BitOr,
+        syn::BinOp::Shl(_) => BinaryOp::Shl,
+        syn::BinOp::Shr(_) => BinaryOp::Shr,
+        syn::BinOp::Eq(_) => BinaryOp::Eq,
+        syn::BinOp::Lt(_) => BinaryOp::Lt,
+        syn::BinOp::Le(_) => BinaryOp::Le,
+        syn::BinOp::Ne(_) => BinaryOp::Ne,
+        syn::BinOp::Ge(_) => BinaryOp::Ge,
+        syn::BinOp::Gt(_) => BinaryOp::Gt,
+        _ => BinaryOp::Add, // Fallback
+    }
 }
