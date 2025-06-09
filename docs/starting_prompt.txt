@@ -1,0 +1,41 @@
+Good morning. We're starting an ambitious project: a compiler to convert valid Rust code into valid mojo code. Rust provides superior safety guarantees to mojo (especially critical in the context of agentive AI contributions), but mojo has better interoperability and perfomance.
+
+This will be a large and complex task, so we'll need to break it down into a program of major steps, then analyze how to create research or action plans for each step. The goal is to generate such a plan which can be aligned between the AI agent + human engineer. The action program should be designed for clarity and concision for the human, but also to facilitate reprompting and metacognitive aide to the language model, with sensitivity to how its context window and architecture informs its work. For both parties, the program should have clear metrics of success at each stage so that difficult steps can be iterated on while maintaining alignment on the project goals. 
+
+The first thing we need to do is research. Please create a research program to frame the initiative, comprised of multiple invidual subtasks. 
+
+Step 1: Research the state of the existing art. 
+
+1.A: Inform yourself on the differing goals of these languages. How does the rust community feel about mojo? How does the mojo community feel about rust? Why do these groups feel this way? Who are major contributors in each of these languages? What are their thoughts about the language they develop in, its vision and stack, and the divergences with its counterpart?
+
+1.B: What is the status of FFIs in mojo? In rust? What interoperability between these languages already exists? Where does it fail? Interrogate the framing of this project and look for alternatives. 
+
+1.C: More broadly, what is the current ecosystem around FFIs in major programming languages? Where do they succeed and where do they fail? Which issues are specific to mojo's broader set of compilation targets (gpus and other specialized hardware)? Which are more general? 
+
+1.D What existing tools allow us to parse and operate on rust ASTs? What tooling exists for mojo? 
+
+Task 2: Architecture Design
+
+2.A How do compilers that take rust code as input and generate code in other languages generally work? Using the tooling identified in (1.D), can you identify an appropriate structure and the steps to set them up? Do we need a workspace or is one combined app/lib enough?
+
+2.B What are rust best practices for combined app/libraries in 2025? Using the latest version of the language can you determine how to initiate the project, how to use only dependencies with apache-2 or mit licenses (this should be statically verified and block adding dependencies with incompatible licenses), and how to maintain helpful metadata like MSRV? How can we leverage CI + pre-commit tooling via cargo-husky to validate the correctness of the system. It should leverage clippy --fix, rustfmt, cargo-audit, cargo-deny (to enforce licenses). What else does it need to do to enforce correctness?
+
+2.C This project should be open-source. It should leverage pre-commit hooks and github actions for CI (use podman configuration). The CI should check that the project's tests run as expected in a matrix of x86 (linux, mac, windows) and arm (linux, mac). You can assume that the implementing agent has Claude's default github integration enabled, but if necessary all CI should be trivial to run locally. The main branch of the repository should be protected in github and best practices should be followed. 
+
+Task 3: Implementation Framing
+
+3.A Break the project into clearly defined tasks with agent-friendly prompts. Determine the contracts to use in TDD and write them out. What existing specifications of the rust programming language exist that can be leveraged to generate large test validations? How can every important invariant identified in the framing be codified through tests or tooling so that any breakages can be instantly detected? How can rust tooling like cargo-fuzz be used to write explicit, expressive, and comprehensive tests? Can tooling facilitate correctness in agentive development (examples: pre-commit hooks that run all tests or check if project files become invalid)? At regular intervals, can the agent be tasked with reviewing its project as a whole and identifying that the implicit contracts in each step are rendered explicit through tests or statically verifiable means?  
+
+3.B Correctness handled, how can the compiler program be structured to faciliate modular and iterative development? Can the implementing agent's model be used to generate mojo code from rust source to operate as a comparison, and then can differences between its implementation and the program's implementation be analyzed in terms of correctness, performance, and brevity? 
+
+3.C This project is set up for Claude code to be working agentively. We should set up Claude configuration files which provides the model with the additional context to be able to work within this framework (a Claude.MD and settings file). Review your docs (examples: https://www.anthropic.com/engineering/claude-code-best-practices https://docs.anthropic.com/en/docs/claude-code/security#tools-available-to-claude dhttps://docs.anthropic.com/en/docs/claude-code/settings https://docs.anthropic.com/en/docs/claude-code/tutorials#use-extended-thinking) to facilitate this. Consider how you can leverage the guidelines of this document to create effective settings and prompts. Research how this is effectively done in academic work and with related models, but focus on getting best results with Claude. Be critical while researching, and always qualify your findings based on your sources. 
+
+Task 4: Implementation
+
+4.A You're Claude code and are generally good at agentive development. You should be thinking constantly about the git history and explaining both to humans and other models exactly why each change is necessary in clear, semantic, reviewable commits. Every commit should pass all tests. You should be careful to organize your work such that your constitutional architecture can re-prompt you. And critically, you should leverage and constantly improve on the correctness work you developped in (3.A). You should have designed an approach to specialize your behavior to the project needs in (3.C). 
+
+4.B You break work down into discrete units and action on them. But, at no point can you identify a unit of work as complete without running the complete test suite / static analysis tooling for the project and validating the correctness of your work.
+
+4.C You should leverage rust ecosystem tooling to constantly evaluate the status of the project. Before taking on new tasks, you should gain awareness of the runtime system and identify sites of technical debt using optional clippy recommendation and tooling like cargo-audit cargo-bloat and cargo-geiger. You should halt new feature development if/when you encounter issues surfaced with these tooling. 
+
+4.D Code is discursive; it need to be semantic and reviewable. So do your git stories. Make sure to create the smallest self-contained and tested semantically viable commits with explicit messages. Make sure to organize them into semantically coherent PRs with risk descriptions that explicit state your goal, how you have verified that this goal is achieved, and where you are unclear and may require additional review. Regularly review whether your current work has drifted from your branch and whether you need to change or reorganize your work. 

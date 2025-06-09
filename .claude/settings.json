@@ -1,0 +1,122 @@
+{
+  "name": "rust2mojo",
+  "description": "A compiler that converts Rust code to Mojo code, bridging Rust's safety with Mojo's AI/ML performance",
+  "version": "0.1.0",
+  "language": "rust",
+  "framework": "none",
+  "build_system": "cargo",
+  "test_framework": "built-in",
+  "package_manager": "cargo",
+  
+  "project_context": {
+    "type": "compiler/transpiler",
+    "domain": "programming_languages",
+    "target_audience": "systems_programmers_and_ai_developers",
+    "complexity": "high"
+  },
+  
+  "licensing": {
+    "project_license": "Apache-2.0",
+    "allowed_dependency_licenses": ["Apache-2.0", "MIT"],
+    "prohibited_licenses": "all_others_denied",
+    "enforcement_tool": "cargo-deny",
+    "license_check_required": "all_commits_and_releases",
+    "strict_enforcement": "only_apache_2_and_mit_permitted"
+  },
+  
+  "development_guidelines": {
+    "code_style": "rustfmt_with_custom_config",
+    "linting": "clippy_strict",
+    "testing": "comprehensive_with_property_based_testing",
+    "documentation": {
+      "requirement": "rustdocs_required_for_all_public_library_apis",
+      "format": "rustdoc_with_examples_and_doctests",
+      "doctests": "all_public_apis_must_have_working_code_examples",
+      "coverage": "aim_for_comprehensive_example_coverage"
+    },
+    "error_handling": "typed_errors_with_context"
+  },
+  
+  "commands": {
+    "build": "cargo build",
+    "test": "cargo test --all-features",
+    "test_docs": "cargo test --doc",
+    "lint": "cargo clippy --all-targets --all-features -- -D warnings",
+    "format": "cargo fmt --all",
+    "check": "cargo check --all-targets --all-features",
+    "docs": "cargo doc --all-features --no-deps --open",
+    "full_ci": "make ci",
+    "setup_dev": "make dev-setup"
+  },
+  
+  "key_files": {
+    "main_entry": "src/main.rs",
+    "lib_entry": "src/lib.rs",
+    "parser": "src/parser.rs",
+    "ast": "src/ast.rs", 
+    "codegen": "src/codegen.rs",
+    "errors": "src/error.rs",
+    "config": [
+      "Cargo.toml",
+      "rust-toolchain.toml",
+      "clippy.toml",
+      "rustfmt.toml",
+      "deny.toml"
+    ]
+  },
+  
+  "testing": {
+    "unit_tests": "src/**/*.rs",
+    "integration_tests": "tests/integration_tests.rs",
+    "doctests": "embedded_in_rustdoc_comments",
+    "fixtures": "tests/fixtures/",
+    "benchmarks": "benches/ (when created)"
+  },
+  
+  "tools": {
+    "required": [
+      "cargo",
+      "rustc",
+      "clippy", 
+      "rustfmt"
+    ],
+    "recommended": [
+      "cargo-audit",
+      "cargo-deny",
+      "cargo-expand",
+      "cargo-tree"
+    ]
+  },
+  
+  "architecture": {
+    "pipeline": [
+      "Rust source → syn AST → Intermediate AST → Mojo codegen → Mojo source"
+    ],
+    "key_dependencies": [
+      "syn: Rust parsing",
+      "quote: Token stream manipulation", 
+      "serde: Serialization",
+      "clap: CLI interface",
+      "anyhow/thiserror: Error handling",
+      "tracing: Logging"
+    ]
+  },
+  
+  "quality_gates": {
+    "pre_commit": [
+      "format_check",
+      "clippy",
+      "tests",
+      "doctests",
+      "audit",
+      "license_check"
+    ],
+    "ci": [
+      "cross_platform_build",
+      "full_test_suite", 
+      "security_audit",
+      "license_compliance",
+      "coverage_report"
+    ]
+  }
+}
