@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Pre-commit hook for rust2mojo
+set -e
+
+echo "Running pre-commit checks..."
+
+# Format code
+echo "Formatting code with rustfmt..."
+cargo fmt --all -- --check
+
+# Run clippy with strict lints
+echo "Running clippy..."
+cargo clippy --all-targets --all-features -- -D warnings
+
+# Check for security vulnerabilities
+echo "Running cargo audit..."
+cargo audit
+
+# Check licenses
+echo "Checking licenses with cargo-deny..."
+cargo deny check licenses
+
+# Run tests
+echo "Running tests..."
+cargo test --all-features
+
+echo "Pre-commit checks passed!"

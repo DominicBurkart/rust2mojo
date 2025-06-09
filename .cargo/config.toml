@@ -1,0 +1,37 @@
+# Cargo configuration for rust2mojo
+
+[build]
+# Use all available CPU cores for parallel compilation
+# jobs = 0  # Let cargo auto-detect
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "target-cpu=native"]
+
+[target.aarch64-unknown-linux-gnu]
+rustflags = ["-C", "target-cpu=native"]
+
+[registries.crates-io]
+protocol = "sparse"
+
+[net]
+retry = 3
+
+[profile.dev]
+# Enable a small amount of optimization in debug mode
+opt-level = 1
+# Enable debug symbols for profiling
+debug = true
+
+[profile.release]
+# Enable link-time optimization for smaller binaries
+lto = true
+# Enable all optimizations
+opt-level = 3
+# Use a single codegen unit for maximum optimization
+codegen-units = 1
+# Enable debug info for better stack traces in release
+debug = true
+
+[profile.test]
+# Faster compilation for tests
+opt-level = 1

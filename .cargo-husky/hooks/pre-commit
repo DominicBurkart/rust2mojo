@@ -1,0 +1,4 @@
+#!/bin/bash
+# Pre-commit hook managed by cargo-husky
+# Runs the pre-commit script we created
+exec .husky/pre-commit
