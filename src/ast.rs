@@ -177,12 +177,24 @@ pub enum ImplItem {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Type {
     Path(String),
-    Reference { mutable: bool, inner: Box<Type> },
-    Pointer { mutable: bool, inner: Box<Type> },
-    Array { inner: Box<Type>, size: Option<usize> },
+    Reference {
+        mutable: bool,
+        inner: Box<Type>,
+    },
+    Pointer {
+        mutable: bool,
+        inner: Box<Type>,
+    },
+    Array {
+        inner: Box<Type>,
+        size: Option<usize>,
+    },
     Slice(Box<Type>),
     Tuple(Vec<Type>),
-    Function { params: Vec<Type>, return_: Box<Type> },
+    Function {
+        params: Vec<Type>,
+        return_: Box<Type>,
+    },
     Generic(String),
     Unit,
 }
@@ -191,12 +203,31 @@ pub enum Type {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Statement {
     Expression(Expression),
-    Let { name: String, mutable: bool, type_: Option<Type>, value: Option<Expression> },
+    Let {
+        name: String,
+        mutable: bool,
+        type_: Option<Type>,
+        value: Option<Expression>,
+    },
     Return(Option<Expression>),
-    If { condition: Expression, then_branch: Vec<Statement>, else_branch: Option<Vec<Statement>> },
-    While { condition: Expression, body: Vec<Statement> },
-    For { pattern: String, iterator: Expression, body: Vec<Statement> },
-    Match { expr: Expression, arms: Vec<MatchArm> },
+    If {
+        condition: Expression,
+        then_branch: Vec<Statement>,
+        else_branch: Option<Vec<Statement>>,
+    },
+    While {
+        condition: Expression,
+        body: Vec<Statement>,
+    },
+    For {
+        pattern: String,
+        iterator: Expression,
+        body: Vec<Statement>,
+    },
+    Match {
+        expr: Expression,
+        arms: Vec<MatchArm>,
+    },
     Block(Vec<Statement>),
 }
 
@@ -206,19 +237,48 @@ pub enum Expression {
     Literal(Literal),
     Identifier(String),
     Path(String),
-    Call { function: Box<Expression>, args: Vec<Expression> },
-    MethodCall { receiver: Box<Expression>, method: String, args: Vec<Expression> },
-    FieldAccess { object: Box<Expression>, field: String },
-    Index { object: Box<Expression>, index: Box<Expression> },
-    Binary { left: Box<Expression>, op: BinaryOp, right: Box<Expression> },
-    Unary { op: UnaryOp, operand: Box<Expression> },
-    Cast { expr: Box<Expression>, type_: Type },
-    Reference { mutable: bool, expr: Box<Expression> },
+    Call {
+        function: Box<Expression>,
+        args: Vec<Expression>,
+    },
+    MethodCall {
+        receiver: Box<Expression>,
+        method: String,
+        args: Vec<Expression>,
+    },
+    FieldAccess {
+        object: Box<Expression>,
+        field: String,
+    },
+    Index {
+        object: Box<Expression>,
+        index: Box<Expression>,
+    },
+    Binary {
+        left: Box<Expression>,
+        op: BinaryOp,
+        right: Box<Expression>,
+    },
+    Unary {
+        op: UnaryOp,
+        operand: Box<Expression>,
+    },
+    Cast {
+        expr: Box<Expression>,
+        type_: Type,
+    },
+    Reference {
+        mutable: bool,
+        expr: Box<Expression>,
+    },
     Dereference(Box<Expression>),
     Block(Vec<Statement>),
     Array(Vec<Expression>),
     Tuple(Vec<Expression>),
-    Struct { name: String, fields: Vec<(String, Expression)> },
+    Struct {
+        name: String,
+        fields: Vec<(String, Expression)>,
+    },
 }
 
 /// Literal values
@@ -234,11 +294,24 @@ pub enum Literal {
 /// Binary operators
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BinaryOp {
-    Add, Sub, Mul, Div, Mod,
-    Eq, Ne, Lt, Le, Gt, Ge,
-    And, Or,
-    BitAnd, BitOr, BitXor,
-    Shl, Shr,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    And,
+    Or,
+    BitAnd,
+    BitOr,
+    BitXor,
+    Shl,
+    Shr,
     Assign,
 }
 
@@ -265,8 +338,15 @@ pub enum Pattern {
     Identifier(String),
     Literal(Literal),
     Tuple(Vec<Pattern>),
-    Struct { name: String, fields: Vec<(String, Pattern)> },
-    Enum { path: String, variant: String, fields: Vec<Pattern> },
+    Struct {
+        name: String,
+        fields: Vec<(String, Pattern)>,
+    },
+    Enum {
+        path: String,
+        variant: String,
+        fields: Vec<Pattern>,
+    },
 }
 
 /// Attribute

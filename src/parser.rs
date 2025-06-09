@@ -9,10 +9,10 @@ use syn::{visit::Visit, File, Item as SynItem};
 /// Parse Rust source code into our intermediate representation
 pub fn parse_rust_code(source: &str) -> Result<CompilationUnit> {
     let syntax_tree: File = syn::parse_str(source)?;
-    
+
     let mut converter = AstConverter::new();
     converter.visit_file(&syntax_tree);
-    
+
     Ok(CompilationUnit {
         items: converter.items,
         metadata: CompilationMetadata {
@@ -30,9 +30,7 @@ struct AstConverter {
 
 impl AstConverter {
     fn new() -> Self {
-        Self {
-            items: Vec::new(),
-        }
+        Self { items: Vec::new() }
     }
 }
 
@@ -79,7 +77,7 @@ impl<'ast> Visit<'ast> for AstConverter {
                 // TODO: Handle other item types or emit warnings
             }
         }
-        
+
         syn::visit::visit_item(self, item);
     }
 }
@@ -119,7 +117,10 @@ fn convert_enum(item_enum: &syn::ItemEnum) -> Enum {
 fn convert_impl(item_impl: &syn::ItemImpl) -> Impl {
     Impl {
         target_type: convert_type(&item_impl.self_ty),
-        trait_: item_impl.trait_.as_ref().map(|(_, path, _)| convert_path_type(path)),
+        trait_: item_impl
+            .trait_
+            .as_ref()
+            .map(|(_, path, _)| convert_path_type(path)),
         generics: convert_generics(&item_impl.generics),
         items: item_impl.items.iter().map(convert_impl_item).collect(),
     }
@@ -177,12 +178,35 @@ fn convert_generics(_generics: &syn::Generics) -> Vec<Generic> {
     Vec::new() // TODO: Implement proper conversion
 }
 
-fn convert_parameters(_inputs: &syn::punctuated::Punctuated<syn::FnArg, syn::Token![,]>) -> Vec<Parameter> {
-    Vec::new() // TODO: Implement proper conversion
+fn convert_parameters(
+    inputs: &syn::punctuated::Punctuated<syn::FnArg, syn::Token![,]>,
+) -> Vec<Parameter> {
+    inputs
+        .iter()
+        .filter_map(|arg| {
+            match arg {
+                syn::FnArg::Typed(pat_type) => {
+                    if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
+                        Some(Parameter {
+                            name: pat_ident.ident.to_string(),
+                            type_: convert_type(&pat_type.ty),
+                            mutable: pat_ident.mutability.is_some(),
+                        })
+                    } else {
+                        None // Skip complex patterns for now
+                    }
+                }
+                syn::FnArg::Receiver(_) => None, // Skip self parameters for now
+            }
+        })
+        .collect()
 }
 
-fn convert_return_type(_output: &syn::ReturnType) -> Option<Type> {
-    None // TODO: Implement proper conversion
+fn convert_return_type(output: &syn::ReturnType) -> Option<Type> {
+    match output {
+        syn::ReturnType::Default => None,
+        syn::ReturnType::Type(_, ty) => Some(convert_type(ty)),
+    }
 }
 
 fn convert_block(_block: &syn::Block) -> Vec<Statement> {
@@ -206,14 +230,12 @@ fn convert_variant(_variant: &syn::Variant) -> Variant {
 
 fn convert_impl_item(_item: &syn::ImplItem) -> ImplItem {
     match _item {
-        syn::ImplItem::Fn(method) => {
-            ImplItem::Function(convert_function(&syn::ItemFn {
-                attrs: method.attrs.clone(),
-                vis: method.vis.clone(),
-                sig: method.sig.clone(),
-                block: Box::new(method.block.clone()),
-            }))
-        }
+        syn::ImplItem::Fn(method) => ImplItem::Function(convert_function(&syn::ItemFn {
+            attrs: method.attrs.clone(),
+            vis: method.vis.clone(),
+            sig: method.sig.clone(),
+            block: Box::new(method.block.clone()),
+        })),
         _ => {
             // TODO: Handle other impl item types
             ImplItem::Function(Function {
@@ -229,12 +251,69 @@ fn convert_impl_item(_item: &syn::ImplItem) -> ImplItem {
     }
 }
 
-fn convert_type(_ty: &syn::Type) -> Type {
-    Type::Unit // TODO: Implement proper conversion
+fn convert_type(ty: &syn::Type) -> Type {
+    match ty {
+        syn::Type::Path(type_path) => {
+            if let Some(ident) = type_path.path.get_ident() {
+                let type_str = ident.to_string();
+                Type::Path(type_str)
+            } else {
+                // Handle complex paths
+                let path_str = type_path
+                    .path
+                    .segments
+                    .iter()
+                    .map(|s| s.ident.to_string())
+                    .collect::<Vec<_>>()
+                    .join("::");
+                Type::Path(path_str)
+            }
+        }
+        syn::Type::Reference(type_ref) => Type::Reference {
+            mutable: type_ref.mutability.is_some(),
+            inner: Box::new(convert_type(&type_ref.elem)),
+        },
+        syn::Type::Ptr(type_ptr) => Type::Pointer {
+            mutable: type_ptr.mutability.is_some(),
+            inner: Box::new(convert_type(&type_ptr.elem)),
+        },
+        syn::Type::Array(type_array) => {
+            let inner = Box::new(convert_type(&type_array.elem));
+            let size = if let syn::Expr::Lit(syn::ExprLit {
+                lit: syn::Lit::Int(lit_int),
+                ..
+            }) = &type_array.len
+            {
+                lit_int.base10_parse().ok()
+            } else {
+                None
+            };
+            Type::Array { inner, size }
+        }
+        syn::Type::Slice(type_slice) => Type::Slice(Box::new(convert_type(&type_slice.elem))),
+        syn::Type::Tuple(type_tuple) => {
+            if type_tuple.elems.is_empty() {
+                Type::Unit
+            } else {
+                Type::Tuple(type_tuple.elems.iter().map(convert_type).collect())
+            }
+        }
+        _ => {
+            // For unsupported types, default to Unit for now
+            Type::Unit
+        }
+    }
 }
 
 fn convert_path_type(_path: &syn::Path) -> Type {
-    Type::Path(_path.segments.iter().map(|s| s.ident.to_string()).collect::<Vec<_>>().join("::"))
+    Type::Path(
+        _path
+            .segments
+            .iter()
+            .map(|s| s.ident.to_string())
+            .collect::<Vec<_>>()
+            .join("::"),
+    )
 }
 
 fn convert_expression(_expr: &syn::Expr) -> Expression {

@@ -17,11 +17,11 @@ mod compilation_contracts {
     fn contract_deterministic_compilation() {
         let compiler = Compiler::new();
         let rust_code = "fn test() -> i32 { 42 }";
-        
+
         // Multiple compilations of the same code must produce identical results
         let result1 = compiler.compile_str(rust_code);
         let result2 = compiler.compile_str(rust_code);
-        
+
         assert_eq!(result1.is_ok(), result2.is_ok());
         if let (Ok(code1), Ok(code2)) = (result1, result2) {
             assert_eq!(code1, code2);
@@ -33,17 +33,17 @@ mod compilation_contracts {
     fn contract_generated_mojo_validity() {
         let compiler = Compiler::new();
         let rust_code = "fn hello() { println!(\"Hello\"); }";
-        
+
         let result = compiler.compile_str(rust_code);
         assert!(result.is_ok());
-        
+
         let mojo_code = result.unwrap();
-        
+
         // Basic Mojo syntax checks
         assert!(mojo_code.contains("fn hello"));
         assert!(mojo_code.ends_with('\n')); // Proper line endings
         assert!(!mojo_code.contains("undefined")); // No undefined references
-        
+
         // Must have proper header
         assert!(mojo_code.contains("# Generated Mojo code"));
     }
@@ -53,10 +53,10 @@ mod compilation_contracts {
     fn contract_empty_input_handling() {
         let compiler = Compiler::new();
         let result = compiler.compile_str("");
-        
+
         assert!(result.is_ok());
         let mojo_code = result.unwrap();
-        
+
         // Should still have proper header and imports
         assert!(mojo_code.contains("# Generated Mojo code"));
         assert!(mojo_code.contains("from memory import UnsafePointer"));
@@ -67,10 +67,10 @@ mod compilation_contracts {
     fn contract_error_handling_quality() {
         let compiler = Compiler::new();
         let invalid_rust = "fn invalid { syntax error }";
-        
+
         let result = compiler.compile_str(invalid_rust);
         assert!(result.is_err());
-        
+
         let error_msg = format!("{}", result.unwrap_err());
         assert!(!error_msg.is_empty());
         assert!(error_msg.contains("parse")); // Should mention parsing issue
@@ -94,15 +94,18 @@ mod type_system_contracts {
         ];
 
         let compiler = Compiler::new();
-        
+
         for (rust_code, expected_type) in test_cases {
             let result = compiler.compile_str(rust_code);
             assert!(result.is_ok(), "Failed to compile: {}", rust_code);
-            
+
             let mojo_code = result.unwrap();
-            assert!(mojo_code.contains(expected_type), 
-                "Expected type {} not found in generated code for: {}", 
-                expected_type, rust_code);
+            assert!(
+                mojo_code.contains(expected_type),
+                "Expected type {} not found in generated code for: {}",
+                expected_type,
+                rust_code
+            );
         }
     }
 
@@ -111,15 +114,15 @@ mod type_system_contracts {
     fn contract_function_signature_preservation() {
         let compiler = Compiler::new();
         let rust_code = "fn add(a: i32, b: i32) -> i32 { a + b }";
-        
+
         let result = compiler.compile_str(rust_code);
         assert!(result.is_ok());
-        
+
         let mojo_code = result.unwrap();
-        
+
         // Function name preserved
         assert!(mojo_code.contains("fn add"));
-        
+
         // Parameters should be present (even if not fully implemented)
         assert!(mojo_code.contains("fn add(") || mojo_code.contains("fn add():"));
     }
@@ -135,7 +138,7 @@ mod memory_safety_contracts {
     fn contract_reference_safety() {
         let compiler = Compiler::new();
         let rust_code = "fn test(x: &i32) -> i32 { *x }";
-        
+
         let result = compiler.compile_str(rust_code);
         // Should compile without panicking
         assert!(result.is_ok() || result.is_err()); // Either way is fine for now
@@ -146,7 +149,7 @@ mod memory_safety_contracts {
     fn contract_ownership_handling() {
         let compiler = Compiler::new();
         let rust_code = "fn test(x: String) -> String { x }";
-        
+
         let result = compiler.compile_str(rust_code);
         // Should handle ownership concepts gracefully
         assert!(result.is_ok() || result.is_err());
@@ -162,15 +165,15 @@ proptest! {
         param_count in 0..5usize,
     ) {
         let compiler = Compiler::new();
-        
+
         // Generate simple function signatures
         let params = (0..param_count)
             .map(|i| format!("p{}: i32", i))
             .collect::<Vec<_>>()
             .join(", ");
-            
+
         let rust_code = format!("fn {}({}) {{ }}", name, params);
-        
+
         // Should never panic, regardless of success/failure
         let _result = compiler.compile_str(&rust_code);
         // Test passes if we reach this point without panicking
@@ -180,7 +183,7 @@ proptest! {
     #[test]
     fn property_output_structure_invariants(rust_function in valid_rust_function()) {
         let compiler = Compiler::new();
-        
+
         if let Ok(mojo_code) = compiler.compile_str(&rust_function) {
             // Invariants that must hold for all generated code
             prop_assert!(mojo_code.starts_with("#")); // Header comment
@@ -194,13 +197,13 @@ proptest! {
     #[test]
     fn property_deterministic_compilation(rust_code in valid_rust_function()) {
         let compiler = Compiler::new();
-        
+
         let result1 = compiler.compile_str(&rust_code);
         let result2 = compiler.compile_str(&rust_code);
-        
+
         // Results must be identical
         prop_assert_eq!(result1.is_ok(), result2.is_ok());
-        
+
         if let (Ok(code1), Ok(code2)) = (result1, result2) {
             prop_assert_eq!(code1, code2);
         }
@@ -218,18 +221,17 @@ fn valid_rust_function() -> impl Strategy<Value = String> {
         Just("bool"),
         Just("()"),
     ];
-    
-    (function_names, prop::collection::vec(basic_types, 0..3))
-        .prop_map(|(name, param_types)| {
-            let params = param_types
-                .iter()
-                .enumerate()
-                .map(|(i, t)| format!("p{}: {}", i, t))
-                .collect::<Vec<_>>()
-                .join(", ");
-                
-            format!("fn {}({}) {{ }}", name, params)
-        })
+
+    (function_names, prop::collection::vec(basic_types, 0..3)).prop_map(|(name, param_types)| {
+        let params = param_types
+            .iter()
+            .enumerate()
+            .map(|(i, t)| format!("p{}: {}", i, t))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        format!("fn {}({}) {{ }}", name, params)
+    })
 }
 
 /// Performance contracts - ensuring compilation speed
@@ -243,23 +245,26 @@ mod performance_contracts {
     fn contract_compilation_speed() {
         let compiler = Compiler::new();
         let rust_code = "fn quick_test() -> i32 { 42 }";
-        
+
         let start = Instant::now();
         let result = compiler.compile_str(rust_code);
         let duration = start.elapsed();
-        
+
         assert!(result.is_ok());
-        
+
         // Should compile very quickly for simple functions
-        assert!(duration < Duration::from_millis(100), 
-            "Compilation took too long: {:?}", duration);
+        assert!(
+            duration < Duration::from_millis(100),
+            "Compilation took too long: {:?}",
+            duration
+        );
     }
 
     /// Contract: Memory usage stays reasonable
     #[test]
     fn contract_memory_efficiency() {
         let compiler = Compiler::new();
-        
+
         // Generate a moderately complex function
         let rust_code = r#"
             fn complex_function(a: i32, b: i32, c: i32) -> i32 {
@@ -273,7 +278,7 @@ mod performance_contracts {
                 }
             }
         "#;
-        
+
         // This is a basic smoke test - more sophisticated memory tracking
         // would require additional tooling
         let result = compiler.compile_str(rust_code);
@@ -315,16 +320,16 @@ mod integration_contracts {
                 println!("Distance: {}", dist);
             }
         "#;
-        
+
         // Should handle this without panicking
         let result = compiler.compile_str(realistic_rust);
-        
+
         // For now, we accept either success or graceful failure
         match result {
             Ok(mojo_code) => {
                 assert!(mojo_code.contains("# Generated Mojo code"));
                 assert!(!mojo_code.is_empty());
-            },
+            }
             Err(e) => {
                 // Error should be meaningful
                 let error_msg = format!("{}", e);
@@ -344,10 +349,10 @@ mod regression_contracts {
     fn contract_main_function_special_case() {
         let compiler = Compiler::new();
         let rust_code = "fn main() { println!(\"Hello, world!\"); }";
-        
+
         let result = compiler.compile_str(rust_code);
         assert!(result.is_ok());
-        
+
         let mojo_code = result.unwrap();
         // Main function should be handled specially in Mojo
         assert!(mojo_code.contains("fn main():"));
@@ -358,10 +363,10 @@ mod regression_contracts {
     fn contract_empty_function_bodies() {
         let compiler = Compiler::new();
         let rust_code = "fn empty() {}";
-        
+
         let result = compiler.compile_str(rust_code);
         assert!(result.is_ok());
-        
+
         let mojo_code = result.unwrap();
         assert!(mojo_code.contains("pass")); // Mojo requires something in empty functions
     }

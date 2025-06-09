@@ -94,7 +94,7 @@ impl ComparisonEngine {
     pub async fn compare(&self, rust_code: &str) -> Result<ComparisonResult> {
         if !self.config.enabled {
             return Err(crate::Error::InternalError(
-                "LLM comparison is disabled".to_string()
+                "LLM comparison is disabled".to_string(),
             ));
         }
 
@@ -120,11 +120,11 @@ impl ComparisonEngine {
     /// Generate Mojo code using LLM
     async fn generate_llm_code(&self, rust_code: &str) -> Result<String> {
         let prompt = self.create_translation_prompt(rust_code);
-        
+
         // This is a placeholder for actual LLM API integration
         // In a real implementation, this would make HTTP requests to the LLM API
         let llm_response = self.call_llm_api(&prompt).await?;
-        
+
         // Extract Mojo code from LLM response
         self.extract_mojo_code(&llm_response)
     }
@@ -155,7 +155,7 @@ Please provide only the Mojo code translation, without explanations:
     async fn call_llm_api(&self, prompt: &str) -> Result<String> {
         // This is a mock implementation
         // Real implementation would use HTTP client to call LLM API
-        
+
         // For now, return a placeholder response
         Ok(format!(
             r#"# LLM-generated Mojo code for comparison
@@ -180,18 +180,24 @@ fn placeholder_function():
                 return Ok(llm_response[code_start..code_end].trim().to_string());
             }
         }
-        
+
         // If no code blocks found, return the whole response
         Ok(llm_response.trim().to_string())
     }
 
     /// Calculate quantitative similarity metrics
-    fn calculate_similarity_metrics(&self, rust2mojo_code: &str, llm_code: &str) -> SimilarityMetrics {
+    fn calculate_similarity_metrics(
+        &self,
+        rust2mojo_code: &str,
+        llm_code: &str,
+    ) -> SimilarityMetrics {
         let structural_similarity = self.calculate_structural_similarity(rust2mojo_code, llm_code);
         let semantic_similarity = self.calculate_semantic_similarity(rust2mojo_code, llm_code);
-        let performance_similarity = self.calculate_performance_similarity(rust2mojo_code, llm_code);
-        
-        let overall_score = (structural_similarity + semantic_similarity + performance_similarity) / 3.0;
+        let performance_similarity =
+            self.calculate_performance_similarity(rust2mojo_code, llm_code);
+
+        let overall_score =
+            (structural_similarity + semantic_similarity + performance_similarity) / 3.0;
 
         SimilarityMetrics {
             structural_similarity,
@@ -206,10 +212,10 @@ fn placeholder_function():
         // Simplified structural comparison based on common patterns
         let patterns1 = self.extract_code_patterns(code1);
         let patterns2 = self.extract_code_patterns(code2);
-        
+
         let common_patterns = patterns1.intersection(&patterns2).count();
         let total_patterns = patterns1.union(&patterns2).count();
-        
+
         if total_patterns == 0 {
             1.0
         } else {
@@ -220,7 +226,7 @@ fn placeholder_function():
     /// Extract code patterns for structural comparison
     fn extract_code_patterns(&self, code: &str) -> std::collections::HashSet<String> {
         let mut patterns = std::collections::HashSet::new();
-        
+
         // Extract function definitions
         for line in code.lines() {
             let trimmed = line.trim();
@@ -240,7 +246,7 @@ fn placeholder_function():
                 patterns.insert("assignment".to_string());
             }
         }
-        
+
         patterns
     }
 
@@ -259,7 +265,11 @@ fn placeholder_function():
     }
 
     /// Perform qualitative analysis
-    fn perform_qualitative_analysis(&self, rust2mojo_code: &str, llm_code: &str) -> QualitativeAnalysis {
+    fn perform_qualitative_analysis(
+        &self,
+        rust2mojo_code: &str,
+        llm_code: &str,
+    ) -> QualitativeAnalysis {
         let mut rust2mojo_advantages = Vec::new();
         let mut llm_advantages = Vec::new();
         let mut improvement_suggestions = Vec::new();
@@ -344,22 +354,34 @@ fn placeholder_function():
             result.metrics.semantic_similarity * 100.0,
             result.metrics.performance_similarity * 100.0,
             result.metrics.overall_score * 100.0,
-            result.analysis.rust2mojo_advantages.iter()
+            result
+                .analysis
+                .rust2mojo_advantages
+                .iter()
                 .map(|s| format!("- {}", s))
                 .collect::<Vec<_>>()
                 .join("\n"),
-            result.analysis.llm_advantages.iter()
+            result
+                .analysis
+                .llm_advantages
+                .iter()
                 .map(|s| format!("- {}", s))
                 .collect::<Vec<_>>()
                 .join("\n"),
-            result.analysis.improvement_suggestions.iter()
+            result
+                .analysis
+                .improvement_suggestions
+                .iter()
                 .map(|s| format!("- {}", s))
                 .collect::<Vec<_>>()
                 .join("\n"),
             if result.analysis.correctness_issues.is_empty() {
                 "- No major correctness issues identified".to_string()
             } else {
-                result.analysis.correctness_issues.iter()
+                result
+                    .analysis
+                    .correctness_issues
+                    .iter()
                     .map(|s| format!("- {}", s))
                     .collect::<Vec<_>>()
                     .join("\n")
@@ -397,18 +419,30 @@ impl BatchComparison {
         }
 
         let total_count = self.results.len();
-        let avg_structural = self.results.iter()
+        let avg_structural = self
+            .results
+            .iter()
             .map(|r| r.metrics.structural_similarity)
-            .sum::<f64>() / total_count as f64;
-        let avg_semantic = self.results.iter()
+            .sum::<f64>()
+            / total_count as f64;
+        let avg_semantic = self
+            .results
+            .iter()
             .map(|r| r.metrics.semantic_similarity)
-            .sum::<f64>() / total_count as f64;
-        let avg_performance = self.results.iter()
+            .sum::<f64>()
+            / total_count as f64;
+        let avg_performance = self
+            .results
+            .iter()
             .map(|r| r.metrics.performance_similarity)
-            .sum::<f64>() / total_count as f64;
-        let avg_overall = self.results.iter()
+            .sum::<f64>()
+            / total_count as f64;
+        let avg_overall = self
+            .results
+            .iter()
             .map(|r| r.metrics.overall_score)
-            .sum::<f64>() / total_count as f64;
+            .sum::<f64>()
+            / total_count as f64;
 
         BatchStatistics {
             total_test_cases: total_count,
@@ -485,7 +519,7 @@ mod tests {
                 }
             }
         "#;
-        
+
         let patterns = engine.extract_code_patterns(code);
         assert!(patterns.contains("function_definition"));
         assert!(patterns.contains("conditional"));
@@ -495,10 +529,10 @@ mod tests {
     #[test]
     fn test_structural_similarity() {
         let engine = ComparisonEngine::new(ComparisonConfig::default());
-        
+
         let code1 = "fn test() { let x = 42; }";
         let code2 = "fn test() { let y = 24; }";
-        
+
         let similarity = engine.calculate_structural_similarity(code1, code2);
         assert!(similarity > 0.5); // Should be similar structure
     }

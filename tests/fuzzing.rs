@@ -19,11 +19,23 @@ mod rust_generators {
     /// Generate valid Rust primitive types
     pub fn primitive_type() -> impl Strategy<Value = &'static str> {
         prop_oneof![
-            Just("i8"), Just("i16"), Just("i32"), Just("i64"), Just("i128"),
-            Just("u8"), Just("u16"), Just("u32"), Just("u64"), Just("u128"),
-            Just("f32"), Just("f64"),
-            Just("bool"), Just("char"), Just("()"),
-            Just("isize"), Just("usize"),
+            Just("i8"),
+            Just("i16"),
+            Just("i32"),
+            Just("i64"),
+            Just("i128"),
+            Just("u8"),
+            Just("u16"),
+            Just("u32"),
+            Just("u64"),
+            Just("u128"),
+            Just("f32"),
+            Just("f64"),
+            Just("bool"),
+            Just("char"),
+            Just("()"),
+            Just("isize"),
+            Just("usize"),
         ]
     }
 
@@ -62,11 +74,9 @@ mod rust_generators {
 
     /// Generate function parameters
     pub fn function_parameters() -> impl Strategy<Value = String> {
-        prop::collection::vec(
-            (identifier(), primitive_type()),
-            0..5
-        ).prop_map(|params| {
-            params.iter()
+        prop::collection::vec((identifier(), primitive_type()), 0..5).prop_map(|params| {
+            params
+                .iter()
                 .map(|(name, ty)| format!("{}: {}", name, ty))
                 .collect::<Vec<_>>()
                 .join(", ")
@@ -95,40 +105,39 @@ mod rust_generators {
             identifier(),
             function_parameters(),
             prop::option::of(primitive_type()),
-            function_body()
-        ).prop_map(|(name, params, ret_type, body)| {
-            let return_part = ret_type
-                .map(|t| format!(" -> {}", t))
-                .unwrap_or_default();
-            format!("fn {}({}) {} {}", name, params, return_part, body)
-        })
+            function_body(),
+        )
+            .prop_map(|(name, params, ret_type, body)| {
+                let return_part = ret_type.map(|t| format!(" -> {}", t)).unwrap_or_default();
+                format!("fn {}({}) {} {}", name, params, return_part, body)
+            })
     }
 
     /// Generate struct definitions
     pub fn struct_definition() -> impl Strategy<Value = String> {
         (
             identifier(),
-            prop::collection::vec((identifier(), primitive_type()), 0..5)
-        ).prop_map(|(name, fields)| {
-            if fields.is_empty() {
-                format!("struct {};", name)
-            } else {
-                let field_strs = fields.iter()
-                    .map(|(fname, ftype)| format!("    {}: {},", fname, ftype))
-                    .collect::<Vec<_>>()
-                    .join("\n");
-                format!("struct {} {{\n{}\n}}", name, field_strs)
-            }
-        })
+            prop::collection::vec((identifier(), primitive_type()), 0..5),
+        )
+            .prop_map(|(name, fields)| {
+                if fields.is_empty() {
+                    format!("struct {};", name)
+                } else {
+                    let field_strs = fields
+                        .iter()
+                        .map(|(fname, ftype)| format!("    {}: {},", fname, ftype))
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    format!("struct {} {{\n{}\n}}", name, field_strs)
+                }
+            })
     }
 
     /// Generate enum definitions
     pub fn enum_definition() -> impl Strategy<Value = String> {
-        (
-            identifier(),
-            prop::collection::vec(identifier(), 1..5)
-        ).prop_map(|(name, variants)| {
-            let variant_strs = variants.iter()
+        (identifier(), prop::collection::vec(identifier(), 1..5)).prop_map(|(name, variants)| {
+            let variant_strs = variants
+                .iter()
                 .map(|v| format!("    {},", v))
                 .collect::<Vec<_>>()
                 .join("\n");
@@ -144,8 +153,9 @@ mod rust_generators {
                 struct_definition(),
                 enum_definition(),
             ],
-            1..10
-        ).prop_map(|items| items.join("\n\n"))
+            1..10,
+        )
+        .prop_map(|items| items.join("\n\n"))
     }
 }
 
@@ -174,7 +184,7 @@ proptest! {
         let _result = compiler.compile_str(&struct_def);
     }
 
-    /// Fuzz test: Parser should handle valid enums  
+    /// Fuzz test: Parser should handle valid enums
     #[test]
     fn fuzz_valid_enums(enum_def in rust_generators::enum_definition()) {
         let compiler = Compiler::new();
@@ -192,17 +202,17 @@ proptest! {
     #[test]
     fn fuzz_output_consistency(func in rust_generators::function_definition()) {
         let compiler = Compiler::new();
-        
+
         if let Ok(mojo_code) = compiler.compile_str(&func) {
             // All generated code should have header
             prop_assert!(mojo_code.contains("# Generated Mojo code"));
-            
+
             // Should have proper imports
             prop_assert!(mojo_code.contains("from "));
-            
+
             // Should end with newline
             prop_assert!(mojo_code.ends_with('\n'));
-            
+
             // Should not contain placeholder text in output
             prop_assert!(!mojo_code.contains("TODO"));
             prop_assert!(!mojo_code.contains("FIXME"));
@@ -217,19 +227,19 @@ proptest! {
     ) {
         let compiler = Compiler::new();
         let mut results = Vec::new();
-        
+
         for _ in 0..iterations {
             results.push(compiler.compile_str(&input));
         }
-        
+
         // All results should be identical
         for i in 1..results.len() {
             prop_assert_eq!(
-                results[0].is_ok(), 
+                results[0].is_ok(),
                 results[i].is_ok(),
                 "Compilation determinism violated"
             );
-            
+
             if let (Ok(ref first), Ok(ref current)) = (&results[0], &results[i]) {
                 prop_assert_eq!(first, current, "Generated code differs between runs");
             }
@@ -245,11 +255,11 @@ mod stress_tests {
     #[test]
     fn stress_large_function_names() {
         let compiler = Compiler::new();
-        
+
         // Very long but valid identifier
         let long_name = "a".repeat(1000);
         let rust_code = format!("fn {}() {{}}", long_name);
-        
+
         let result = compiler.compile_str(&rust_code);
         // Should handle gracefully (success or meaningful error)
         assert!(result.is_ok() || result.is_err());
@@ -258,14 +268,14 @@ mod stress_tests {
     #[test]
     fn stress_many_parameters() {
         let compiler = Compiler::new();
-        
+
         // Function with many parameters
         let params = (0..100)
             .map(|i| format!("p{}: i32", i))
             .collect::<Vec<_>>()
             .join(", ");
         let rust_code = format!("fn test_many_params({}) {{}}", params);
-        
+
         let result = compiler.compile_str(&rust_code);
         assert!(result.is_ok() || result.is_err());
     }
@@ -273,14 +283,14 @@ mod stress_tests {
     #[test]
     fn stress_deeply_nested_expressions() {
         let compiler = Compiler::new();
-        
+
         // Deeply nested parentheses
         let mut expr = "1".to_string();
         for _ in 0..50 {
             expr = format!("({})", expr);
         }
         let rust_code = format!("fn test() -> i32 {{ {} }}", expr);
-        
+
         let result = compiler.compile_str(&rust_code);
         assert!(result.is_ok() || result.is_err());
     }
@@ -288,14 +298,10 @@ mod stress_tests {
     #[test]
     fn stress_unicode_identifiers() {
         let compiler = Compiler::new();
-        
+
         // Unicode identifiers (valid in Rust)
-        let test_cases = vec![
-            "fn test_π() {}",
-            "fn test_λ() {}", 
-            "fn test_🦀() {}",
-        ];
-        
+        let test_cases = vec!["fn test_π() {}", "fn test_λ() {}", "fn test_🦀() {}"];
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
             assert!(result.is_ok() || result.is_err());
@@ -313,7 +319,7 @@ mod error_fuzzing {
         #[test]
         fn fuzz_error_quality(invalid_input in "[^a-zA-Z0-9\\s{}();,]*") {
             let compiler = Compiler::new();
-            
+
             if let Err(error) = compiler.compile_str(&invalid_input) {
                 let error_msg = format!("{}", error);
                 prop_assert!(!error_msg.is_empty(), "Error message should not be empty");
@@ -326,7 +332,7 @@ mod error_fuzzing {
         fn fuzz_error_types(input in ".*") {
             use rust2mojo::Error;
             let compiler = Compiler::new();
-            
+
             if let Err(error) = compiler.compile_str(&input) {
                 // Error should match one of our defined error types
                 match error {
@@ -343,7 +349,7 @@ mod error_fuzzing {
     #[test]
     fn fuzz_malformed_syntax() {
         let compiler = Compiler::new();
-        
+
         let malformed_cases = vec![
             "fn incomplete_function(",
             "struct MissingBrace {",
@@ -353,13 +359,17 @@ mod error_fuzzing {
             "impl for {}",
             "trait {}",
         ];
-        
+
         for case in malformed_cases {
             let result = compiler.compile_str(case);
             assert!(result.is_err(), "Should fail on malformed syntax: {}", case);
-            
+
             let error_msg = format!("{}", result.unwrap_err());
-            assert!(!error_msg.is_empty(), "Error message should not be empty for: {}", case);
+            assert!(
+                !error_msg.is_empty(),
+                "Error message should not be empty for: {}",
+                case
+            );
         }
     }
 }
@@ -378,11 +388,11 @@ mod performance_fuzzing {
             _timeout_ms in 100u64..5000u64
         ) {
             let compiler = Compiler::new();
-            
+
             let start = Instant::now();
             let _result = compiler.compile_str(&func);
             let duration = start.elapsed();
-            
+
             // Should complete within 5 seconds for any reasonable input
             prop_assert!(
                 duration < Duration::from_secs(5),
@@ -395,7 +405,7 @@ mod performance_fuzzing {
     #[test]
     fn fuzz_memory_efficiency() {
         let compiler = Compiler::new();
-        
+
         // Generate a reasonably complex but not excessive program
         let complex_program = r#"
             struct Point { x: f64, y: f64 }
@@ -421,11 +431,11 @@ mod performance_fuzzing {
                 }
             }
         "#;
-        
+
         // This is a basic smoke test - real memory profiling would require
         // additional tooling and potentially unsafe code
         let result = compiler.compile_str(complex_program);
-        
+
         // Just ensure it doesn't crash or hang
         assert!(result.is_ok() || result.is_err());
     }

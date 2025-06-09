@@ -31,7 +31,7 @@
 //!
 //! let compiler = Compiler::new();
 //! let input_path = Path::new("example.rs");
-//! 
+//!
 //! match compiler.compile_file(input_path) {
 //!     Ok(mojo_code) => {
 //!         // Save to output file or process further
@@ -104,7 +104,7 @@ impl Compiler {
     ///
     /// let compiler = Compiler::new();
     /// let rust_code = "fn greet(name: &str) { println!(\"Hello, {}!\", name); }";
-    /// 
+    ///
     /// match compiler.compile_str(rust_code) {
     ///     Ok(mojo_code) => {
     ///         assert!(mojo_code.contains("fn greet"));
@@ -186,9 +186,12 @@ mod tests {
     fn test_compiler_creation() {
         let compiler = Compiler::new();
         let default_compiler = Compiler::default();
-        
+
         // Just ensure they can be created without panicking
-        assert_eq!(std::mem::size_of_val(&compiler), std::mem::size_of_val(&default_compiler));
+        assert_eq!(
+            std::mem::size_of_val(&compiler),
+            std::mem::size_of_val(&default_compiler)
+        );
     }
 
     #[test]

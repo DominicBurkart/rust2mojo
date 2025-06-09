@@ -62,13 +62,13 @@ impl MojoGenerator {
         // Generate function signature
         let visibility = self.mojo_visibility(&func.visibility);
         let name = &func.name;
-        
+
         // Convert main function to special Mojo main
         if name == "main" {
             self.writeln("fn main():");
         } else {
             self.write(&format!("{}fn {}(", visibility, name));
-            
+
             // Generate parameters
             for (i, param) in func.parameters.iter().enumerate() {
                 if i > 0 {
@@ -76,14 +76,14 @@ impl MojoGenerator {
                 }
                 self.write(&format!("{}: {}", param.name, self.mojo_type(&param.type_)));
             }
-            
+
             self.write(")");
-            
+
             // Generate return type
             if let Some(return_type) = &func.return_type {
                 self.write(&format!(" -> {}", self.mojo_type(return_type)));
             }
-            
+
             self.writeln(":");
         }
 
@@ -104,23 +104,31 @@ impl MojoGenerator {
     fn generate_struct(&mut self, struct_item: &Struct) -> Result<()> {
         let visibility = self.mojo_visibility(&struct_item.visibility);
         self.writeln(&format!("{}struct {}:", visibility, struct_item.name));
-        
+
         self.indent();
         if struct_item.fields.is_empty() {
             self.writeln("pass");
         } else {
             for field in &struct_item.fields {
-                self.writeln(&format!("var {}: {}", field.name, self.mojo_type(&field.type_)));
+                self.writeln(&format!(
+                    "var {}: {}",
+                    field.name,
+                    self.mojo_type(&field.type_)
+                ));
             }
-            
+
             // Generate constructor
             self.writeln("");
             self.write("fn __init__(inout self");
             for field in &struct_item.fields {
-                self.write(&format!(", {}: {}", field.name, self.mojo_type(&field.type_)));
+                self.write(&format!(
+                    ", {}: {}",
+                    field.name,
+                    self.mojo_type(&field.type_)
+                ));
             }
             self.writeln("):");
-            
+
             self.indent();
             for field in &struct_item.fields {
                 self.writeln(&format!("self.{} = {}", field.name, field.name));
@@ -157,9 +165,10 @@ impl MojoGenerator {
 
     fn generate_const(&mut self, const_item: &Const) -> Result<()> {
         let visibility = self.mojo_visibility(&const_item.visibility);
-        self.writeln(&format!("{}alias {} = {}", 
-            visibility, 
-            const_item.name, 
+        self.writeln(&format!(
+            "{}alias {} = {}",
+            visibility,
+            const_item.name,
             self.mojo_expression(&const_item.value)
         ));
         Ok(())
@@ -168,10 +177,11 @@ impl MojoGenerator {
     fn generate_static(&mut self, static_item: &Static) -> Result<()> {
         let visibility = self.mojo_visibility(&static_item.visibility);
         let mutability = if static_item.mutable { "var" } else { "alias" };
-        self.writeln(&format!("{}{} {} = {}", 
-            visibility, 
+        self.writeln(&format!(
+            "{}{} {} = {}",
+            visibility,
             mutability,
-            static_item.name, 
+            static_item.name,
             self.mojo_expression(&static_item.value)
         ));
         Ok(())
@@ -179,9 +189,10 @@ impl MojoGenerator {
 
     fn generate_type_alias(&mut self, type_item: &TypeAlias) -> Result<()> {
         let visibility = self.mojo_visibility(&type_item.visibility);
-        self.writeln(&format!("{}alias {} = {}", 
-            visibility, 
-            type_item.name, 
+        self.writeln(&format!(
+            "{}alias {} = {}",
+            visibility,
+            type_item.name,
             self.mojo_type(&type_item.type_)
         ));
         Ok(())
@@ -192,7 +203,12 @@ impl MojoGenerator {
             Statement::Expression(expr) => {
                 self.writeln(&self.mojo_expression(expr));
             }
-            Statement::Let { name, mutable, type_, value } => {
+            Statement::Let {
+                name,
+                mutable,
+                type_,
+                value,
+            } => {
                 let keyword = if *mutable { "var" } else { "let" };
                 let type_annotation = if let Some(ty) = type_ {
                     format!(": {}", self.mojo_type(ty))
@@ -204,7 +220,10 @@ impl MojoGenerator {
                 } else {
                     String::new()
                 };
-                self.writeln(&format!("{} {}{}{}", keyword, name, type_annotation, assignment));
+                self.writeln(&format!(
+                    "{} {}{}{}",
+                    keyword, name, type_annotation, assignment
+                ));
             }
             Statement::Return(expr) => {
                 if let Some(e) = expr {
@@ -213,14 +232,18 @@ impl MojoGenerator {
                     self.writeln("return");
                 }
             }
-            Statement::If { condition, then_branch, else_branch } => {
+            Statement::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
                 self.writeln(&format!("if {}:", self.mojo_expression(condition)));
                 self.indent();
                 for stmt in then_branch {
                     self.generate_statement(stmt)?;
                 }
                 self.dedent();
-                
+
                 if let Some(else_stmts) = else_branch {
                     self.writeln("else:");
                     self.indent();
@@ -238,8 +261,16 @@ impl MojoGenerator {
                 }
                 self.dedent();
             }
-            Statement::For { pattern, iterator, body } => {
-                self.writeln(&format!("for {} in {}:", pattern, self.mojo_expression(iterator)));
+            Statement::For {
+                pattern,
+                iterator,
+                body,
+            } => {
+                self.writeln(&format!(
+                    "for {} in {}:",
+                    pattern,
+                    self.mojo_expression(iterator)
+                ));
                 self.indent();
                 for stmt in body {
                     self.generate_statement(stmt)?;
@@ -265,14 +296,16 @@ impl MojoGenerator {
             Expression::Path(path) => path.clone(),
             Expression::Call { function, args } => {
                 let func_str = self.mojo_expression(function);
-                let args_str = args.iter()
+                let args_str = args
+                    .iter()
                     .map(|arg| self.mojo_expression(arg))
                     .collect::<Vec<_>>()
                     .join(", ");
                 format!("{}({})", func_str, args_str)
             }
             Expression::Binary { left, op, right } => {
-                format!("{} {} {}", 
+                format!(
+                    "{} {} {}",
                     self.mojo_expression(left),
                     self.mojo_binary_op(op),
                     self.mojo_expression(right)
@@ -287,7 +320,13 @@ impl MojoGenerator {
             Literal::String(s) => format!("\"{}\"", s),
             Literal::Integer(i) => i.to_string(),
             Literal::Float(f) => f.to_string(),
-            Literal::Boolean(b) => if *b { "True".to_string() } else { "False".to_string() },
+            Literal::Boolean(b) => {
+                if *b {
+                    "True".to_string()
+                } else {
+                    "False".to_string()
+                }
+            }
             Literal::Char(c) => format!("\"{}\"", c),
         }
     }
@@ -358,8 +397,8 @@ impl MojoGenerator {
 
     fn mojo_visibility(&self, vis: &Visibility) -> &'static str {
         match vis {
-            Visibility::Public => "",  // Mojo defaults to public
-            _ => "",  // Mojo doesn't have explicit private visibility
+            Visibility::Public => "", // Mojo defaults to public
+            _ => "",                  // Mojo doesn't have explicit private visibility
         }
     }
 

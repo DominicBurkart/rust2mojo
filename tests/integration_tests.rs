@@ -9,10 +9,10 @@ fn test_basic_function_compilation() {
             println!("Hello, world!");
         }
     "#;
-    
+
     let compiler = Compiler::new();
     let result = compiler.compile_str(rust_code);
-    
+
     assert!(result.is_ok());
     let mojo_code = result.unwrap();
     assert!(mojo_code.contains("fn hello_world():"));
@@ -25,10 +25,10 @@ fn test_main_function_compilation() {
             let x = 42;
         }
     "#;
-    
+
     let compiler = Compiler::new();
     let result = compiler.compile_str(rust_code);
-    
+
     assert!(result.is_ok());
     let mojo_code = result.unwrap();
     assert!(mojo_code.contains("fn main():"));
@@ -42,10 +42,10 @@ fn test_struct_compilation() {
             y: i32,
         }
     "#;
-    
+
     let compiler = Compiler::new();
     let result = compiler.compile_str(rust_code);
-    
+
     assert!(result.is_ok());
     let mojo_code = result.unwrap();
     assert!(mojo_code.contains("struct Point:"));
@@ -58,9 +58,9 @@ fn test_invalid_rust_code() {
             // This is invalid Rust code
         }
     "#;
-    
+
     let compiler = Compiler::new();
     let result = compiler.compile_str(rust_code);
-    
+
     assert!(result.is_err());
 }

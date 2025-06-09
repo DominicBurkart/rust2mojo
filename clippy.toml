@@ -3,11 +3,10 @@
 # Avoid false positives
 too-many-arguments-threshold = 8
 type-complexity-threshold = 500
-single-char-lifetime-names-threshold = 10
 
 # Performance tuning
 avoid-breaking-exported-api = false
 msrv = "1.81.0"
 
 # Documentation settings
-missing-docs-in-private-items = true
+missing-docs-in-crate-items = true

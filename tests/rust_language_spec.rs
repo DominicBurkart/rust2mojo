@@ -15,29 +15,28 @@ mod basic_constructs {
         let test_cases = vec![
             // Basic function
             "fn simple() {}",
-            
             // Function with parameters
             "fn with_params(a: i32, b: i32) {}",
-            
             // Function with return type
             "fn with_return() -> i32 { 42 }",
-            
             // Function with both
             "fn full_function(x: i32, y: i32) -> i32 { x + y }",
-            
             // Generic function (should handle gracefully)
             "fn generic<T>() {}",
-            
             // Function with lifetime (should handle gracefully)
             "fn with_lifetime<'a>(x: &'a str) -> &'a str { x }",
         ];
 
         let compiler = Compiler::new();
-        
+
         for (i, rust_code) in test_cases.iter().enumerate() {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Test case {} panicked: {}", i, rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Test case {} panicked: {}",
+                i,
+                rust_code
+            );
         }
     }
 
@@ -49,21 +48,22 @@ mod basic_constructs {
             "fn test() { let x: i32 = 42; }",
             "fn test() { let mut x = 42; }",
             "fn test() { let mut x: i32 = 42; }",
-            
             // Const declarations
             "const VALUE: i32 = 42;",
-            
             // Static declarations
             "static GLOBAL: i32 = 42;",
             "static mut GLOBAL_MUT: i32 = 42;",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -83,27 +83,26 @@ mod basic_constructs {
             "fn test(x: u64) {}",
             "fn test(x: u128) {}",
             "fn test(x: usize) {}",
-            
             // Floating point types
             "fn test(x: f32) {}",
             "fn test(x: f64) {}",
-            
             // Boolean type
             "fn test(x: bool) {}",
-            
             // Character type
             "fn test(x: char) {}",
-            
             // Unit type
             "fn test() -> () {}",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 }
@@ -119,22 +118,23 @@ mod compound_types {
             // Array types
             "fn test(x: [i32; 5]) {}",
             "fn test() { let arr: [i32; 3] = [1, 2, 3]; }",
-            
             // Slice types
             "fn test(x: &[i32]) {}",
             "fn test(x: &mut [i32]) {}",
-            
             // Array literals
             "fn test() { let x = [1, 2, 3]; }",
             "fn test() { let x = [42; 100]; }",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -144,21 +144,22 @@ mod compound_types {
             // Tuple types
             "fn test(x: (i32, i32)) {}",
             "fn test(x: (i32, f64, bool)) {}",
-            
             // Tuple literals
             "fn test() { let x = (1, 2); }",
             "fn test() { let x = (42, 3.14, true); }",
-            
             // Tuple indexing
             "fn test() { let x = (1, 2); let y = x.0; }",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -167,21 +168,17 @@ mod compound_types {
         let test_cases = vec![
             // Unit struct
             "struct Unit;",
-            
             // Tuple struct
             "struct Point(i32, i32);",
-            
             // Named field struct
             r#"struct Person {
                 name: String,
                 age: u32,
             }"#,
-            
             // Struct with generic parameters
             r#"struct Container<T> {
                 value: T,
             }"#,
-            
             // Struct instantiation
             r#"
             struct Point { x: i32, y: i32 }
@@ -192,11 +189,14 @@ mod compound_types {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -209,13 +209,11 @@ mod compound_types {
                 Green,
                 Blue,
             }"#,
-            
             // Enum with data
             r#"enum Option<T> {
                 Some(T),
                 None,
             }"#,
-            
             // Complex enum
             r#"enum Message {
                 Quit,
@@ -226,11 +224,14 @@ mod compound_types {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 }
@@ -245,26 +246,25 @@ mod control_flow {
         let test_cases = vec![
             // Basic if
             "fn test() { if true {} }",
-            
             // If-else
             "fn test() { if true {} else {} }",
-            
             // If-else if-else
             "fn test() { if true {} else if false {} else {} }",
-            
             // If expressions
             "fn test() -> i32 { if true { 1 } else { 2 } }",
-            
             // Complex conditions
             "fn test(x: i32) { if x > 0 && x < 10 {} }",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -273,26 +273,25 @@ mod control_flow {
         let test_cases = vec![
             // Loop
             "fn test() { loop { break; } }",
-            
             // While loop
             "fn test() { while true { break; } }",
-            
             // For loop
             "fn test() { for i in 0..10 {} }",
-            
             // For loop with iterator
             "fn test() { let vec = vec![1, 2, 3]; for item in vec {} }",
-            
             // Loop with labels
             "fn test() { 'outer: loop { break 'outer; } }",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -307,7 +306,6 @@ mod control_flow {
                     _ => {},
                 }
             }"#,
-            
             // Match with guards
             r#"fn test(x: i32) {
                 match x {
@@ -315,7 +313,6 @@ mod control_flow {
                     _ => {},
                 }
             }"#,
-            
             // Match on enum
             r#"
             enum Option<T> { Some(T), None }
@@ -329,11 +326,14 @@ mod control_flow {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 }
@@ -355,11 +355,14 @@ mod expressions {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -375,11 +378,14 @@ mod expressions {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -392,11 +398,14 @@ mod expressions {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -412,11 +421,14 @@ mod expressions {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 }
@@ -431,27 +443,27 @@ mod ownership_borrowing {
         let test_cases = vec![
             // Immutable references
             "fn test(x: &i32) -> i32 { *x }",
-            
             // Mutable references
             "fn test(x: &mut i32) { *x = 42; }",
-            
             // Multiple immutable references
             r#"fn test() {
                 let x = 42;
                 let r1 = &x;
                 let r2 = &x;
             }"#,
-            
             // Reference to reference
             "fn test(x: &&i32) -> i32 { **x }",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -460,22 +472,23 @@ mod ownership_borrowing {
         let test_cases = vec![
             // Function with lifetime parameter
             "fn test<'a>(x: &'a str) -> &'a str { x }",
-            
             // Struct with lifetime
             r#"struct Borrowed<'a> {
                 value: &'a i32,
             }"#,
-            
             // Multiple lifetimes
             "fn test<'a, 'b>(x: &'a str, y: &'b str) -> &'a str { x }",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 }
@@ -490,23 +503,23 @@ mod generics {
         let test_cases = vec![
             // Simple generic function
             "fn identity<T>(x: T) -> T { x }",
-            
             // Multiple type parameters
             "fn pair<T, U>(x: T, y: U) -> (T, U) { (x, y) }",
-            
             // Generic with bounds
             "fn compare<T: PartialEq>(x: T, y: T) -> bool { x == y }",
-            
             // Where clause
             "fn complex<T>() -> T where T: Default { T::default() }",
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -517,13 +530,11 @@ mod generics {
             r#"struct Container<T> {
                 value: T,
             }"#,
-            
             // Multiple type parameters
             r#"struct Pair<T, U> {
                 first: T,
                 second: U,
             }"#,
-            
             // Generic with bounds
             r#"struct Wrapper<T: Clone> {
                 inner: T,
@@ -531,11 +542,14 @@ mod generics {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 }
@@ -552,14 +566,12 @@ mod traits {
             r#"trait Display {
                 fn fmt(&self) -> String;
             }"#,
-            
             // Trait with default implementation
             r#"trait Greet {
                 fn greet(&self) -> String {
                     "Hello".to_string()
                 }
             }"#,
-            
             // Trait with associated types
             r#"trait Iterator {
                 type Item;
@@ -568,11 +580,14 @@ mod traits {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 
@@ -588,7 +603,6 @@ mod traits {
                 }
             }
             "#,
-            
             // Trait impl
             r#"
             trait Display {
@@ -604,11 +618,14 @@ mod traits {
         ];
 
         let compiler = Compiler::new();
-        
+
         for rust_code in test_cases {
             let result = compiler.compile_str(rust_code);
-            assert!(result.is_ok() || result.is_err(), 
-                "Panicked on: {}", rust_code);
+            assert!(
+                result.is_ok() || result.is_err(),
+                "Panicked on: {}",
+                rust_code
+            );
         }
     }
 }

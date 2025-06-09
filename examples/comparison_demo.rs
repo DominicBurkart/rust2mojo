@@ -3,7 +3,7 @@
 //! This example shows how to use the comparison engine to validate
 //! rust2mojo output against LLM-generated code.
 
-use rust2mojo::comparison::{ComparisonConfig, ComparisonEngine, BatchComparison};
+use rust2mojo::comparison::{BatchComparison, ComparisonConfig, ComparisonEngine};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -22,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Single comparison example
     println!("📋 Single Comparison Example");
     println!("-----------------------------");
-    
+
     let engine = ComparisonEngine::new(config.clone());
     let rust_code = r#"
         fn fibonacci(n: u32) -> u32 {
@@ -37,8 +37,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match engine.compare(rust_code).await {
         Ok(result) => {
             println!("✅ Comparison completed successfully!");
-            println!("Overall similarity score: {:.2}%", result.metrics.overall_score * 100.0);
-            
+            println!(
+                "Overall similarity score: {:.2}%",
+                result.metrics.overall_score * 100.0
+            );
+
             // Generate and display report
             let report = engine.generate_report(&result);
             println!("\n📊 Detailed Report:");
@@ -53,9 +56,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Batch comparison example
     println!("\n📚 Batch Comparison Example");
     println!("----------------------------");
-    
+
     let mut batch = BatchComparison::new(config);
-    
+
     let test_cases = vec![
         "fn add(a: i32, b: i32) -> i32 { a + b }",
         "fn factorial(n: u32) -> u32 { if n <= 1 { 1 } else { n * factorial(n - 1) } }",
@@ -63,7 +66,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (i, test_case) in test_cases.iter().enumerate() {
-        println!("Processing test case {}: {}", i + 1, test_case.lines().next().unwrap_or(""));
+        println!(
+            "Processing test case {}: {}",
+            i + 1,
+            test_case.lines().next().unwrap_or("")
+        );
         match batch.add_test_case(test_case).await {
             Ok(()) => println!("  ✅ Added successfully"),
             Err(e) => println!("  ❌ Failed to add: {}", e),
@@ -74,13 +81,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let stats = batch.generate_statistics();
     println!("\n📈 Batch Statistics:");
     println!("  Total test cases: {}", stats.total_test_cases);
-    println!("  Average overall score: {:.2}%", stats.average_overall_score * 100.0);
-    println!("  Average structural similarity: {:.2}%", stats.average_structural_similarity * 100.0);
+    println!(
+        "  Average overall score: {:.2}%",
+        stats.average_overall_score * 100.0
+    );
+    println!(
+        "  Average structural similarity: {:.2}%",
+        stats.average_structural_similarity * 100.0
+    );
 
     // Generate full batch report (in real usage, you might save this to a file)
     let batch_report = batch.generate_batch_report();
-    println!("\n💾 Full batch report generated ({} characters)", batch_report.len());
-    
+    println!(
+        "\n💾 Full batch report generated ({} characters)",
+        batch_report.len()
+    );
+
     println!("\n🎯 Demo completed!");
     println!("In a real implementation, this would:");
     println!("  • Make actual API calls to LLM services");
