@@ -1,0 +1,55 @@
+[package]
+name = "rust2mojo"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.81.0"
+authors = ["Rust2Mojo Contributors"]
+license = "Apache-2.0"
+description = "A compiler to convert Rust code into Mojo code"
+repository = "https://github.com/rust2mojo/rust2mojo"
+readme = "README.md"
+keywords = ["rust", "mojo", "compiler", "transpiler", "ai"]
+categories = ["development-tools", "compilers"]
+
+[lib]
+name = "rust2mojo"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rust2mojo"
+path = "src/main.rs"
+
+[[example]]
+name = "comparison_demo"
+path = "examples/comparison_demo.rs"
+required-features = ["comparison"]
+
+[features]
+default = []
+comparison = ["tokio"]
+
+[dependencies]
+syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
+proc-macro2 = "1.0"
+quote = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.0", features = ["derive", "cargo"] }
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio = { version = "1.0", features = ["full"], optional = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+proptest = "1.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+cargo-husky = { version = "1", default-features = false, features = ["user-hooks"] }
+tokio = { version = "1.0", features = ["full"] }
+
+
+[profile.release]
+debug = true
+lto = true
+codegen-units = 1

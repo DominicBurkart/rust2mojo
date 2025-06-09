@@ -1,0 +1,62 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock file (keep for applications, ignore for libraries)
+# We'll keep it since this is an application with a binary
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test artifacts
+junit.xml
+coverage/
+*.profraw
+
+# Benchmarking
+benchmarks/
+
+# Documentation
+/doc/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Generated Mojo files (for testing)
+*.mojo
+test_output/
+
+# Dependencies
+node_modules/
+
+# Coverage reports
+lcov.info
+coverage.lcov
+
+# Audit cache
+audit.cache
+
+# Local configuration
+.config/
