@@ -327,7 +327,22 @@ fn convert_statement(stmt: &syn::Stmt) -> Option<Statement> {
             // Items in function bodies are rare, skip for now
             None
         }
-        syn::Stmt::Expr(expr, _) => Some(Statement::Expression(convert_expression(expr))),
+        syn::Stmt::Expr(expr, _semicolon) => {
+            // Check if this is a control flow statement
+            match expr {
+                syn::Expr::If(expr_if) => convert_if_statement(expr_if),
+                syn::Expr::While(expr_while) => convert_while_statement(expr_while),
+                syn::Expr::ForLoop(expr_for) => convert_for_statement(expr_for),
+                syn::Expr::Return(expr_return) => {
+                    let value = expr_return.expr.as_ref().map(|e| convert_expression(e));
+                    Some(Statement::Return(value))
+                }
+                _ => {
+                    // Regular expression statement
+                    Some(Statement::Expression(convert_expression(expr)))
+                }
+            }
+        }
         syn::Stmt::Macro(_) => {
             // Macro calls, skip for now
             None
@@ -468,6 +483,58 @@ fn convert_literal_expression(expr_lit: &syn::ExprLit) -> Expression {
         syn::Lit::Char(lit_char) => Expression::Literal(Literal::Char(lit_char.value())),
         _ => Expression::Literal(Literal::String("unsupported_literal".to_string())),
     }
+}
+
+fn convert_if_statement(expr_if: &syn::ExprIf) -> Option<Statement> {
+    let condition = convert_expression(&expr_if.cond);
+    let then_branch = convert_block(&expr_if.then_branch);
+    
+    let else_branch = if let Some((_, else_expr)) = &expr_if.else_branch {
+        match &**else_expr {
+            syn::Expr::Block(expr_block) => Some(convert_block(&expr_block.block)),
+            syn::Expr::If(nested_if) => {
+                // Handle else if by converting to nested if statement
+                if let Some(nested_if_stmt) = convert_if_statement(nested_if) {
+                    Some(vec![nested_if_stmt])
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    } else {
+        None
+    };
+    
+    Some(Statement::If {
+        condition,
+        then_branch,
+        else_branch,
+    })
+}
+
+fn convert_while_statement(expr_while: &syn::ExprWhile) -> Option<Statement> {
+    let condition = convert_expression(&expr_while.cond);
+    let body = convert_block(&expr_while.body);
+    
+    Some(Statement::While { condition, body })
+}
+
+fn convert_for_statement(expr_for: &syn::ExprForLoop) -> Option<Statement> {
+    // Extract pattern (usually just an identifier)
+    let pattern = match &*expr_for.pat {
+        syn::Pat::Ident(pat_ident) => pat_ident.ident.to_string(),
+        _ => "item".to_string(), // Fallback for complex patterns
+    };
+    
+    let iterator = convert_expression(&expr_for.expr);
+    let body = convert_block(&expr_for.body);
+    
+    Some(Statement::For {
+        pattern,
+        iterator,
+        body,
+    })
 }
 
 fn convert_binary_operator(op: &syn::BinOp) -> BinaryOp {
