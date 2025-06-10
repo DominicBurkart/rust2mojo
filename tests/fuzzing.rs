@@ -5,7 +5,6 @@
 
 use proptest::prelude::*;
 use rust2mojo::Compiler;
-use std::collections::HashSet;
 
 /// Generate random but syntactically valid Rust code for fuzzing
 mod rust_generators {
@@ -159,7 +158,7 @@ mod rust_generators {
     }
 }
 
-/// Fuzzing tests for parser robustness
+// Fuzzing tests for parser robustness
 proptest! {
     /// Fuzz test: Parser should never panic on any input
     #[test]

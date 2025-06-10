@@ -5,7 +5,7 @@
 use clap::{Parser, Subcommand};
 use rust2mojo::{Compiler, Result};
 use std::path::PathBuf;
-use tracing::{error, info};
+use tracing::info;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

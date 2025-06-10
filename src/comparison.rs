@@ -5,7 +5,6 @@
 
 use crate::{Compiler, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Configuration for LLM comparison
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -152,7 +151,7 @@ Please provide only the Mojo code translation, without explanations:
     }
 
     /// Call the LLM API (placeholder implementation)
-    async fn call_llm_api(&self, prompt: &str) -> Result<String> {
+    async fn call_llm_api(&self, _prompt: &str) -> Result<String> {
         // This is a mock implementation
         // Real implementation would use HTTP client to call LLM API
 
@@ -273,7 +272,7 @@ fn placeholder_function():
         let mut rust2mojo_advantages = Vec::new();
         let mut llm_advantages = Vec::new();
         let mut improvement_suggestions = Vec::new();
-        let mut correctness_issues = Vec::new();
+        let correctness_issues = Vec::new();
 
         // Analyze code structure
         if rust2mojo_code.contains("# Generated Mojo code") {

@@ -4,8 +4,7 @@
 //! must satisfy. These tests serve as executable specifications.
 
 use proptest::prelude::*;
-use rust2mojo::{Compiler, Error};
-use std::collections::HashSet;
+use rust2mojo::Compiler;
 
 /// Core compilation invariants that must always hold
 #[cfg(test)]
@@ -156,7 +155,7 @@ mod memory_safety_contracts {
     }
 }
 
-/// Property-based testing for compilation invariants
+// Property-based testing for compilation invariants
 proptest! {
     /// Property: Any syntactically valid function compiles without panicking
     #[test]
