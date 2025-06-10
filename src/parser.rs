@@ -170,8 +170,12 @@ fn convert_type_alias(item_type: &syn::ItemType) -> TypeAlias {
 }
 
 // Helper conversion functions (stubs for now)
-fn convert_visibility(_vis: &syn::Visibility) -> Visibility {
-    Visibility::Private // TODO: Implement proper conversion
+fn convert_visibility(vis: &syn::Visibility) -> Visibility {
+    match vis {
+        syn::Visibility::Public(_) => Visibility::Public,
+        syn::Visibility::Restricted(_) => Visibility::Private, // pub(crate), pub(super), etc. treated as private
+        syn::Visibility::Inherited => Visibility::Private,
+    }
 }
 
 fn convert_generics(_generics: &syn::Generics) -> Vec<Generic> {
@@ -221,8 +225,43 @@ fn convert_attributes(_attrs: &[syn::Attribute]) -> Vec<Attribute> {
     Vec::new() // TODO: Implement proper conversion
 }
 
-fn convert_struct_fields(_fields: &syn::Fields) -> Vec<Field> {
-    Vec::new() // TODO: Implement proper conversion
+fn convert_struct_fields(fields: &syn::Fields) -> Vec<Field> {
+    match fields {
+        syn::Fields::Named(fields_named) => {
+            fields_named
+                .named
+                .iter()
+                .filter_map(|field| {
+                    if let Some(ident) = &field.ident {
+                        Some(Field {
+                            name: ident.to_string(),
+                            type_: convert_type(&field.ty),
+                            visibility: convert_visibility(&field.vis),
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        }
+        syn::Fields::Unnamed(fields_unnamed) => {
+            // Tuple struct fields - create numbered field names
+            fields_unnamed
+                .unnamed
+                .iter()
+                .enumerate()
+                .map(|(i, field)| Field {
+                    name: format!("field_{}", i),
+                    type_: convert_type(&field.ty),
+                    visibility: convert_visibility(&field.vis),
+                })
+                .collect()
+        }
+        syn::Fields::Unit => {
+            // Unit struct has no fields
+            Vec::new()
+        }
+    }
 }
 
 fn convert_variant(_variant: &syn::Variant) -> Variant {
