@@ -214,11 +214,7 @@ fn convert_return_type(output: &syn::ReturnType) -> Option<Type> {
 }
 
 fn convert_block(block: &syn::Block) -> Vec<Statement> {
-    block
-        .stmts
-        .iter()
-        .filter_map(convert_statement)
-        .collect()
+    block.stmts.iter().filter_map(convert_statement).collect()
 }
 
 fn convert_attributes(_attrs: &[syn::Attribute]) -> Vec<Attribute> {
@@ -227,23 +223,17 @@ fn convert_attributes(_attrs: &[syn::Attribute]) -> Vec<Attribute> {
 
 fn convert_struct_fields(fields: &syn::Fields) -> Vec<Field> {
     match fields {
-        syn::Fields::Named(fields_named) => {
-            fields_named
-                .named
-                .iter()
-                .filter_map(|field| {
-                    if let Some(ident) = &field.ident {
-                        Some(Field {
-                            name: ident.to_string(),
-                            type_: convert_type(&field.ty),
-                            visibility: convert_visibility(&field.vis),
-                        })
-                    } else {
-                        None
-                    }
+        syn::Fields::Named(fields_named) => fields_named
+            .named
+            .iter()
+            .filter_map(|field| {
+                field.ident.as_ref().map(|ident| Field {
+                    name: ident.to_string(),
+                    type_: convert_type(&field.ty),
+                    visibility: convert_visibility(&field.vis),
                 })
-                .collect()
-        }
+            })
+            .collect(),
         syn::Fields::Unnamed(fields_unnamed) => {
             // Tuple struct fields - create numbered field names
             fields_unnamed
@@ -394,13 +384,16 @@ fn convert_local_statement(local: &syn::Local) -> Option<Statement> {
     if let syn::Pat::Ident(pat_ident) = &local.pat {
         let name = pat_ident.ident.to_string();
         let mutable = pat_ident.mutability.is_some();
-        
+
         // Extract type annotation if present - syn::Local doesn't have ty field directly
         let type_ = None; // TODO: Extract from pattern type annotations when present
-        
+
         // Extract initializer if present
-        let value = local.init.as_ref().map(|init| convert_expression(&init.expr));
-        
+        let value = local
+            .init
+            .as_ref()
+            .map(|init| convert_expression(&init.expr));
+
         Some(Statement::Let {
             name,
             mutable,
@@ -439,11 +432,7 @@ fn convert_expression(expr: &syn::Expr) -> Expression {
         }
         syn::Expr::Call(expr_call) => {
             let function = Box::new(convert_expression(&expr_call.func));
-            let args = expr_call
-                .args
-                .iter()
-                .map(convert_expression)
-                .collect();
+            let args = expr_call.args.iter().map(convert_expression).collect();
             Expression::Call { function, args }
         }
         syn::Expr::Return(expr_return) => {
@@ -474,7 +463,8 @@ fn convert_expression(expr: &syn::Expr) -> Expression {
             // Field access like obj.field
             let base = convert_expression(&expr_field.base);
             if let syn::Member::Named(field_name) = &expr_field.member {
-                Expression::Path(format!("{}.{}", 
+                Expression::Path(format!(
+                    "{}.{}",
                     match base {
                         Expression::Identifier(id) => id,
                         Expression::Path(path) => path,
@@ -527,24 +517,20 @@ fn convert_literal_expression(expr_lit: &syn::ExprLit) -> Expression {
 fn convert_if_statement(expr_if: &syn::ExprIf) -> Option<Statement> {
     let condition = convert_expression(&expr_if.cond);
     let then_branch = convert_block(&expr_if.then_branch);
-    
+
     let else_branch = if let Some((_, else_expr)) = &expr_if.else_branch {
         match &**else_expr {
             syn::Expr::Block(expr_block) => Some(convert_block(&expr_block.block)),
             syn::Expr::If(nested_if) => {
                 // Handle else if by converting to nested if statement
-                if let Some(nested_if_stmt) = convert_if_statement(nested_if) {
-                    Some(vec![nested_if_stmt])
-                } else {
-                    None
-                }
+                convert_if_statement(nested_if).map(|nested_if_stmt| vec![nested_if_stmt])
             }
             _ => None,
         }
     } else {
         None
     };
-    
+
     Some(Statement::If {
         condition,
         then_branch,
@@ -555,7 +541,7 @@ fn convert_if_statement(expr_if: &syn::ExprIf) -> Option<Statement> {
 fn convert_while_statement(expr_while: &syn::ExprWhile) -> Option<Statement> {
     let condition = convert_expression(&expr_while.cond);
     let body = convert_block(&expr_while.body);
-    
+
     Some(Statement::While { condition, body })
 }
 
@@ -565,10 +551,10 @@ fn convert_for_statement(expr_for: &syn::ExprForLoop) -> Option<Statement> {
         syn::Pat::Ident(pat_ident) => pat_ident.ident.to_string(),
         _ => "item".to_string(), // Fallback for complex patterns
     };
-    
+
     let iterator = convert_expression(&expr_for.expr);
     let body = convert_block(&expr_for.body);
-    
+
     Some(Statement::For {
         pattern,
         iterator,

@@ -156,8 +156,7 @@ Please provide only the Mojo code translation, without explanations:
         // Real implementation would use HTTP client to call LLM API
 
         // For now, return a placeholder response
-        Ok(format!(
-            r#"# LLM-generated Mojo code for comparison
+        Ok(r#"# LLM-generated Mojo code for comparison
 from memory import UnsafePointer
 from collections import List
 
@@ -166,7 +165,7 @@ fn placeholder_function():
     # Real implementation would call actual LLM API
     print("LLM generated code")
 "#
-        ))
+        .to_string())
     }
 
     /// Extract Mojo code from LLM response

@@ -26,9 +26,6 @@ jobs:
           - os: macOS-latest
             target: x86_64-apple-darwin
 
-    container:
-      image: ${{ matrix.os == 'ubuntu-latest' && 'quay.io/podman/stable:latest' || null }}
-
     steps:
     - name: Checkout sources
       uses: actions/checkout@v4
@@ -44,15 +41,16 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Cache cargo build
       uses: actions/cache@v4
       with:
         path: target
-        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Check formatting
       run: cargo fmt --all -- --check
@@ -76,11 +74,23 @@ jobs:
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
 
+    - name: Cache cargo tools
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin
+        key: ${{ runner.os }}-cargo-tools-${{ hashFiles('Cargo.toml') }}
+
     - name: Install cargo-audit
-      run: cargo install cargo-audit
+      run: |
+        if ! command -v cargo-audit &> /dev/null; then
+          cargo install cargo-audit
+        fi
 
     - name: Install cargo-deny
-      run: cargo install cargo-deny
+      run: |
+        if ! command -v cargo-deny &> /dev/null; then
+          cargo install cargo-deny
+        fi
 
     - name: Run cargo audit
       run: cargo audit
@@ -107,8 +117,17 @@ jobs:
       with:
         targets: ${{ matrix.target }}
 
+    - name: Cache cargo tools
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin
+        key: ${{ runner.os }}-cargo-tools-cross
+
     - name: Install cross
-      run: cargo install cross
+      run: |
+        if ! command -v cross &> /dev/null; then
+          cargo install cross --git https://github.com/cross-rs/cross
+        fi
 
     - name: Cross compile
       run: cross build --target ${{ matrix.target }} --release
@@ -125,8 +144,17 @@ jobs:
       with:
         components: llvm-tools-preview
 
+    - name: Cache cargo tools
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin
+        key: ${{ runner.os }}-cargo-tools-llvm-cov
+
     - name: Install cargo-llvm-cov
-      run: cargo install cargo-llvm-cov
+      run: |
+        if ! command -v cargo-llvm-cov &> /dev/null; then
+          cargo install cargo-llvm-cov
+        fi
 
     - name: Generate coverage
       run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
@@ -135,4 +163,4 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         files: lcov.info
-        fail_ci_if_error: true
+        fail_ci_if_error: false

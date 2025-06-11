@@ -12,7 +12,7 @@ mod basic_constructs {
 
     #[test]
     fn spec_function_declarations() {
-        let test_cases = vec![
+        let test_cases = [
             // Basic function
             "fn simple() {}",
             // Function with parameters

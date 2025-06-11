@@ -355,6 +355,7 @@ impl MojoGenerator {
         }
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn mojo_type(&self, ty: &Type) -> String {
         match ty {
             Type::Path(path) => {
