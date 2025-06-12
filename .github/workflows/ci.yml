@@ -33,7 +33,6 @@ jobs:
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@1.82.0
       with:
-        toolchain: ${{ matrix.rust }}
         targets: ${{ matrix.target }}
         components: rustfmt, clippy
 
@@ -83,7 +82,7 @@ jobs:
     - name: Install cargo-audit
       run: |
         if ! command -v cargo-audit &> /dev/null; then
-          cargo install cargo-audit
+          cargo install cargo-audit --version "^0.20"
         fi
 
     - name: Install cargo-deny
