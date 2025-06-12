@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut batch = BatchComparison::new(config);
 
-    let test_cases = vec![
+    let test_cases = [
         "fn add(a: i32, b: i32) -> i32 { a + b }",
         "fn factorial(n: u32) -> u32 { if n <= 1 { 1 } else { n * factorial(n - 1) } }",
         "struct Point { x: f64, y: f64 }",

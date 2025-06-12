@@ -7,6 +7,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Error types for the rust2mojo compiler
 #[derive(Error, Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum Error {
     /// Rust parsing errors
     #[error("Failed to parse Rust code: {0}")]
