@@ -11,11 +11,14 @@ feature-depth = 1
 ignore = []
 
 [licenses]
+# STRICT LICENSE ENFORCEMENT: Only MIT and Apache-2.0 are allowed
+# This allowlist will BLOCK any dependencies with incompatible licenses
 allow = [
     "MIT",
     "Apache-2.0",
 ]
 confidence-threshold = 0.8
+# Exceptions for specific crates that require additional licenses
 exceptions = [
     { allow = ["Unicode-3.0"], crate = "unicode-ident" },
 ]

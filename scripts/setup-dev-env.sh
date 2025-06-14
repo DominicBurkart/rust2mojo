@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Development Environment Setup Script
 # 
@@ -123,7 +123,7 @@ setup_precommit_hooks() {
     
     # Create the pre-commit script
     cat > .husky/pre-commit << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Pre-commit hook for rust2mojo
 # Runs formatting, linting, and security checks
