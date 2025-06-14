@@ -6,7 +6,7 @@ type-complexity-threshold = 500
 
 # Performance tuning
 avoid-breaking-exported-api = false
-msrv = "1.82.0"
+msrv = "1.87.0"
 
 # Documentation settings
 missing-docs-in-crate-items = true

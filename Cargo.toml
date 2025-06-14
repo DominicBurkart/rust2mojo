@@ -2,7 +2,7 @@
 name = "rust2mojo"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.82.0"
+rust-version = "1.87.0"
 authors = ["Rust2Mojo Contributors"]
 license = "Apache-2.0"
 description = "A compiler to convert Rust code into Mojo code"
