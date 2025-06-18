@@ -25,7 +25,7 @@ jobs:
         components: rustfmt, clippy
 
     - name: Install cargo-msrv
-      run: cargo install cargo-msrv --version "^0.18.1" --locked
+      run: cargo install cargo-msrv --version "=0.18.1" --locked
 
     - name: Cache cargo registry
       uses: actions/cache@v4

@@ -105,7 +105,7 @@ install_dev_tools() {
     install_cargo_tool "cargo-deny" "" "--locked"
     
     # MSRV analysis and verification (compatible with Rust 1.82.0)
-    install_cargo_tool "cargo-msrv" "--version ^0.18.1" "--locked"
+    install_cargo_tool "cargo-msrv" "--version =0.18.1" "--locked"
     
     # Additional useful development tools
     install_cargo_tool "cargo-outdated" "" ""
