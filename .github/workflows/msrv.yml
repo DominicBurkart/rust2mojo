@@ -24,6 +24,9 @@ jobs:
       with:
         components: rustfmt, clippy
 
+    - name: Install cargo-msrv
+      run: cargo install cargo-msrv --locked
+
     - name: Cache cargo registry
       uses: actions/cache@v4
       with:
@@ -39,6 +42,18 @@ jobs:
         path: target/
         key: ${{ runner.os }}-msrv-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Cache cargo tools
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin
+        key: ${{ runner.os }}-cargo-tools-msrv
+
+    - name: Verify MSRV with cargo-msrv
+      run: |
+        CARGO_MSRV=$(grep 'rust-version' Cargo.toml | sed 's/.*"\([^"]*\)".*/\1/')
+        echo "Verifying MSRV: $CARGO_MSRV"
+        cargo msrv verify --rust-version "$CARGO_MSRV"
+
     - name: Check formatting (MSRV)
       run: cargo fmt --all --check
 
@@ -50,13 +65,3 @@ jobs:
 
     - name: Check examples compile (MSRV)
       run: cargo check --examples --all-features
-
-    - name: Verify Cargo.toml consistency
-      run: |
-        CARGO_MSRV=$(grep 'rust-version' Cargo.toml | sed 's/.*"\([^"]*\)".*/\1/')
-        EXPECTED_MSRV="1.82.0"
-        if [[ "$CARGO_MSRV" != "$EXPECTED_MSRV" ]]; then
-          echo "ERROR: Cargo.toml rust-version ($CARGO_MSRV) doesn't match MSRV ($EXPECTED_MSRV)"
-          exit 1
-        fi
-        echo "✅ Cargo.toml rust-version matches MSRV: $CARGO_MSRV"

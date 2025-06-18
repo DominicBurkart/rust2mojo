@@ -104,6 +104,9 @@ install_dev_tools() {
     install_cargo_tool "cargo-audit" "--version ^0.20" "--locked"
     install_cargo_tool "cargo-deny" "" "--locked"
     
+    # MSRV analysis and verification
+    install_cargo_tool "cargo-msrv" "" "--locked"
+    
     # Additional useful development tools
     install_cargo_tool "cargo-outdated" "" ""
     install_cargo_tool "cargo-tree" "" ""
