@@ -31,8 +31,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@${{ matrix.rust }}
+      uses: dtolnay/rust-toolchain@stable
       with:
+        toolchain: ${{ matrix.rust }}
         targets: ${{ matrix.target }}
         components: rustfmt, clippy
 
